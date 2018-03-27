@@ -6,11 +6,9 @@ const pluginDefaults = {
   // this is appended to the slug before calling getPage:
   routePrefix: '',
   // any additional config you want for the CMS route:
-  routeConfig: {
-  },
+  routeConfig: {},
   // any data to merge with the _data that was fetched
-  globalData: {
-  },
+  globalData: {},
   // override to validate the resulting data before using it in the _template
   validateData(data) {
     return Joi.validate(data, Joi.object());
@@ -30,13 +28,13 @@ const register = (server, pluginOptions) => {
       // get the page for that slug:
       const page = await options.getPage(request.params.slug);
       // populate the content for that page:
-      const allData = await processData(request, page, options.globalData);
+      let allData = await processData(request, page, options.globalData);
       // validate that content:
-      const validated = await options.validateData(allData);
-      if (validated.error) {
-        throw boom.boomify(validated.error);
+      const validatedResult = await options.validateData(allData);
+      if (validatedResult instanceof Error) {
+        throw boom.badRequest(validatedResult);
       }
-
+      allData = validatedResult;
       // render/return the view if there is a template and JSON wasn't explicitly requested:
       if (page._template && request.query.json !== '1') {
         return h.view(allData._template, allData);

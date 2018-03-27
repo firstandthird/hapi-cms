@@ -1,6 +1,7 @@
 const tap = require('tap');
 const Hapi = require('hapi');
 const plugin = require('../index.js');
+const Joi = require('joi');
 
 tap.test('request handler will get data for a given slug', async t => {
   const server = new Hapi.Server({ port: 8080 });
@@ -110,6 +111,136 @@ tap.test('request handler will always return data if ?json=1', async t => {
     key1: 'value1',
     key2: 'value2'
   }, 'returns the correct data for the slug');
+  await server.stop();
+  t.end();
+});
+
+tap.test('options.routePrefix will prefix the request handler', async t => {
+  const server = new Hapi.Server({ port: 8080 });
+  // a server method to wait for:
+  server.method('getImage', (name) => new Promise(resolve => resolve({
+    image: 'someawesome.jpg',
+    copy: 'this is the best page ever'
+  })));
+
+  await server.register({
+    plugin,
+    options: {
+      routePrefix: '/render',
+      getPage(slug) {
+        return {
+          _template: '',
+          key1: 'value1',
+          key2: 'value2',
+          hero: 'getImage()'
+        };
+      }
+    }
+  });
+  await server.start();
+  const res = await server.inject({
+    method: 'get',
+    url: '/render/page-one'
+  });
+  t.equal(res.statusCode, 200, 'returns HTTP 200');
+  t.match(res.result, {
+    _template: '',
+    key1: 'value1',
+    key2: 'value2',
+    hero: {
+      image: 'someawesome.jpg',
+      copy: 'this is the best page ever'
+    }
+  }, 'returns the correct data for the slug');
+  await server.stop();
+  t.end();
+});
+
+tap.test('options.globalData will augment the data fetched from getPage', async t => {
+  const server = new Hapi.Server({ port: 8080 });
+  // a server method to wait for:
+  server.method('getImage', (name) => new Promise(resolve => resolve({
+    image: 'someawesome.jpg',
+    copy: 'this is the best page ever'
+  })));
+
+  await server.register({
+    plugin,
+    options: {
+      globalData: {
+        key2: 'value2',
+        hero: 'getImage()'
+      },
+      getPage(slug) {
+        t.equal(slug, 'page-one', 'passes correct slug to getPage');
+        return {
+          _template: '',
+          key1: 'value1'
+        };
+      }
+    }
+  });
+  await server.start();
+  const res = await server.inject({
+    method: 'get',
+    url: '/page-one'
+  });
+  t.equal(res.statusCode, 200, 'returns HTTP 200');
+  t.match(res.result, {
+    _template: '',
+    key1: 'value1',
+    key2: 'value2',
+    hero: {
+      image: 'someawesome.jpg',
+      copy: 'this is the best page ever'
+    }
+  }, 'returns the correct data for the slug');
+  await server.stop();
+  t.end();
+});
+
+tap.test('options.validateData will notify of problems in the provided data', async t => {
+  const server = new Hapi.Server({ port: 8080 });
+  // a server method to wait for:
+  server.method('getImage', (name) => new Promise(resolve => resolve({
+    image: 'someawesome.jpg',
+    copy: 'this is the best page ever'
+  })));
+
+  await server.register({
+    plugin,
+    options: {
+      validateData(data) {
+        if (data.slug === 'page-one') {
+          return data;
+        }
+        const result = Joi.validate(data, Joi.object().keys({
+          notIncluded: Joi.string().required()
+        }));
+        return result.error;
+      },
+      getPage(slug) {
+        return {
+          _template: '',
+          slug,
+          key1: 'value1',
+          key2: 'value2',
+          hero: 'getImage()'
+        };
+      }
+    }
+  });
+  await server.start();
+  const res = await server.inject({
+    method: 'get',
+    url: '/page-one'
+  });
+  t.equal(res.statusCode, 200, 'returns HTTP 200 for valid data');
+  const res2 = await server.inject({
+    method: 'get',
+    url: '/page-two'
+  });
+  t.equal(res2.statusCode, 400, 'returns HTTP 400 for invalid data');
   await server.stop();
   t.end();
 });
