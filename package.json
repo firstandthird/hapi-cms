@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "lint": "eslint .",
-    "test": "lab -e test --leaks"
+    "test": "eslint . && tap test/test.*.js --cov"
   },
   "repository": {
     "type": "git",
@@ -32,6 +32,7 @@
   },
   "dependencies": {
     "aug": "^2.0.0",
+    "boom": "^7.2.0",
     "joi": "^13.1.2",
     "p-props": "^1.1.0",
     "str2fn": "^5.0.0",

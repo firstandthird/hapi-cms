@@ -4,6 +4,12 @@ const plugin = require('../index.js');
 
 tap.test('request handler will get data for a given slug', async t => {
   const server = new Hapi.Server({ port: 8080 });
+  // a server method to wait for:
+  server.method('getImage', (name) => new Promise(resolve => resolve({
+    image: 'someawesome.jpg',
+    copy: 'this is the best page ever'
+  })));
+
   await server.register({
     plugin,
     options: {
@@ -11,10 +17,9 @@ tap.test('request handler will get data for a given slug', async t => {
         t.equal(slug, 'page-one', 'passes correct slug to getPage');
         return {
           _template: '',
-          _data: {
-            key1: 'value1',
-            key2: 'value2'
-          }
+          key1: 'value1',
+          key2: 'value2',
+          hero: 'getImage()'
         };
       }
     }
@@ -26,8 +31,13 @@ tap.test('request handler will get data for a given slug', async t => {
   });
   t.equal(res.statusCode, 200, 'returns HTTP 200');
   t.match(res.result, {
+    _template: '',
     key1: 'value1',
-    key2: 'value2'
+    key2: 'value2',
+    hero: {
+      image: 'someawesome.jpg',
+      copy: 'this is the best page ever'
+    }
   }, 'returns the correct data for the slug');
   await server.stop();
   t.end();
@@ -43,13 +53,11 @@ tap.test('request handler will render a view for a given slug', async t => {
         getPage(slug) {
           return {
             _template: 'testTemplate',
-            _data: {
-              alphabet: [
-                { portion: 'abc' },
-                { portion: 'def' },
-                { portion: 'ghi' },
-              ]
-            }
+            alphabet: [
+              { portion: 'abc' },
+              { portion: 'def' },
+              { portion: 'ghi' },
+            ]
           };
         }
       }
@@ -80,10 +88,8 @@ tap.test('request handler will always return data if ?json=1', async t => {
         getPage(slug) {
           return {
             _template: 'testTemplate',
-            _data: {
-              key1: 'value1',
-              key2: 'value2'
-            }
+            key1: 'value1',
+            key2: 'value2'
           };
         }
       }
@@ -100,6 +106,7 @@ tap.test('request handler will always return data if ?json=1', async t => {
   });
   t.equal(res.statusCode, 200, 'returns HTTP 200');
   t.match(res.result, {
+    _template: 'testTemplate',
     key1: 'value1',
     key2: 'value2'
   }, 'returns the correct data for the slug');

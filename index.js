@@ -1,12 +1,8 @@
-const wreck = require('wreck');
 const Joi = require('joi');
 const processData = require('./lib/processData');
+const boom = require('boom');
 
 const pluginDefaults = {
-  // by default just GET whatever lives on the other end of the slug:
-  getPage(slug) {
-    return wreck.get(slug, { json: 'force' });
-  },
   // this is appended to the slug before calling getPage:
   routePrefix: '',
   // any additional config you want for the CMS route:
@@ -23,34 +19,30 @@ const pluginDefaults = {
 
 const register = (server, pluginOptions) => {
   const options = Object.assign({}, pluginDefaults, pluginOptions);
+  if (typeof options.getPage !== 'function') {
+    throw new Error('hapi-cms needs an options.getPage function in order to work');
+  }
   server.route({
     method: 'get',
-    path: '/{slug*}',
+    path: `${options.routePrefix}/{slug*}`,
     config: options.routeConfig,
     async handler(request, h) {
-      // get slug:
-      const slug = options.routePrefix !== '' ? `${options.routePrefix}/${request.params.slug}` : request.params.slug;
       // get the page for that slug:
-      const page = await options.getPage(slug);
+      const page = await options.getPage(request.params.slug);
       // populate the content for that page:
-      const content = await processData(request, page._data, options.globalData);
+      const allData = await processData(request, page, options.globalData);
       // validate that content:
-      const validated = await options.validateData(content);
+      const validated = await options.validateData(allData);
       if (validated.error) {
-        // todo: throw a boom error
+        throw boom.boomify(validated.error);
       }
 
-      // just return the data if requested:
-      if (request.query.json === '1') {
-        return content;
+      // render/return the view if there is a template and JSON wasn't explicitly requested:
+      if (page._template && request.query.json !== '1') {
+        return h.view(allData._template, allData);
       }
-      // return the view if there is a template:
-      if (page._template) {
-        page.content = content;
-        return h.view(page._template, page);
-      }
-      // otherwise just return the data:
-      return content;
+      // otherwise return the data:
+      return allData;
     }
   });
 };
