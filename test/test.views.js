@@ -44,6 +44,20 @@ tap.test('request handler will get data for a given slug', async t => {
   t.end();
 });
 
+tap.test('plugin will error if no getPage method is provided', async t => {
+  const server = new Hapi.Server({ port: 8080 });
+  try {
+    await server.register({
+      plugin,
+      options: {}
+    });
+  } catch (e) {
+    t.isA(e, Error);
+    return t.end();
+  }
+  t.fail();
+});
+
 tap.test('request handler will render a view for a given slug', async t => {
   const server = new Hapi.Server({ port: 8080 });
   await server.register([
