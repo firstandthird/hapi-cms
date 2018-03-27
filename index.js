@@ -46,7 +46,8 @@ const register = (server, pluginOptions) => {
       }
       // return the view if there is a template:
       if (page._template) {
-        return h.view(page._template, content);
+        page.content = content;
+        return h.view(page._template, page);
       }
       // otherwise just return the data:
       return content;
