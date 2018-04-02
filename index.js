@@ -36,7 +36,7 @@ const register = (server, pluginOptions) => {
       }
       allData = validatedResult;
       // render/return the view if there is a template and JSON wasn't explicitly requested:
-      if (page._template && request.query.json !== '1') {
+      if (page && page._template && request.query.json !== '1') {
         return h.view(allData._template, allData);
       }
       // otherwise return the data:
