@@ -385,6 +385,7 @@ tap.test('options.dataKey will send data as that key', async t => {
   });
   t.equal(res.statusCode, 200, 'returns HTTP 200');
   t.match(res.result, {
+    _template: '',
     content: {
       _template: '',
       slug: 'page-one',

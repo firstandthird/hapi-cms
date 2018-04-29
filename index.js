@@ -38,7 +38,8 @@ const register = (server, pluginOptions) => {
       allData = validatedResult;
       if (options.dataKey) {
         allData = {
-          [options.dataKey]: allData
+          [options.dataKey]: allData,
+          _template: allData._template
         };
       }
       // render/return the view if there is a template and JSON wasn't explicitly requested:
