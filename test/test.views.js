@@ -360,3 +360,38 @@ tap.test('options.validateData will notify of problems in the provided data', as
   await server.stop();
   t.end();
 });
+
+tap.test('options.dataKey will send data as that key', async t => {
+  const server = new Hapi.Server({ port: 8080 });
+
+  await server.register({
+    plugin,
+    options: {
+      dataKey: 'content',
+      getPage(slug) {
+        return {
+          _template: '',
+          slug,
+          key1: 'value1',
+          key2: 'value2',
+        };
+      }
+    }
+  });
+  await server.start();
+  const res = await server.inject({
+    method: 'get',
+    url: '/page-one'
+  });
+  t.equal(res.statusCode, 200, 'returns HTTP 200');
+  t.match(res.result, {
+    content: {
+      _template: '',
+      slug: 'page-one',
+      key1: 'value1',
+      key2: 'value2',
+    }
+  }, 'returns the correct data for the slug');
+  await server.stop();
+  t.end();
+});

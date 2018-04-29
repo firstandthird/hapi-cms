@@ -3,6 +3,7 @@ const processData = require('./lib/processData');
 const boom = require('boom');
 
 const pluginDefaults = {
+  dataKey: null,
   // this is appended to the slug before calling getPage:
   routePrefix: '',
   // any additional config you want for the CMS route:
@@ -35,6 +36,11 @@ const register = (server, pluginOptions) => {
         throw boom.badRequest(validatedResult);
       }
       allData = validatedResult;
+      if (options.dataKey) {
+        allData = {
+          [options.dataKey]: allData
+        };
+      }
       // render/return the view if there is a template and JSON wasn't explicitly requested:
       if (allData && allData._template && request.query.json !== '1') {
         return h.view(allData._template, allData);
