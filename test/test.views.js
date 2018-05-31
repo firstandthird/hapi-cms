@@ -3,6 +3,7 @@ const Hapi = require('hapi');
 const plugin = require('../index.js');
 const Joi = require('joi');
 const Boom = require('boom');
+//tap.runOnly = true;
 
 tap.test('request handler will get data for a given slug', async t => {
   const server = new Hapi.Server({ port: 8080 });
@@ -15,8 +16,10 @@ tap.test('request handler will get data for a given slug', async t => {
   await server.register({
     plugin,
     options: {
-      getPage(slug) {
+      getPage(slug, request, h) {
         t.equal(slug, 'page-one', 'passes correct slug to getPage');
+        t.notEqual(request, null);
+        t.notEqual(h, null);
         return {
           _template: '',
           key1: 'value1',
@@ -472,6 +475,40 @@ tap.test('options.dataKey will send data as that key', async t => {
       key2: 'value2',
     }
   }, 'returns the correct data for the slug');
+  await server.stop();
+  t.end();
+});
+
+tap.test('getPage method can return toolkit to return early', async t => {
+  const server = new Hapi.Server({ port: 8080 });
+  await server.register([
+    require('vision'),
+    {
+      plugin,
+      options: {
+        getPage(slug, request, h) {
+          return h.redirect('/');
+        }
+      }
+    }
+  ]);
+  server.views({
+    engines: { html: require('handlebars') },
+    path: `${__dirname}/views`
+  });
+  server.route({
+    method: 'get',
+    path: '/',
+    handler(request, h) {
+      return 'ok';
+    }
+  });
+  await server.start();
+  const res = await server.inject({
+    method: 'get',
+    url: '/page-one'
+  });
+  t.equal(res.statusCode, 302, 'returns HTTP 302');
   await server.stop();
   t.end();
 });

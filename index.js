@@ -27,7 +27,11 @@ const register = (server, pluginOptions) => {
     config: options.routeConfig,
     async handler(request, h) {
       // get the page for that slug:
-      const page = await options.getPage(request.params.slug);
+      const page = await options.getPage(request.params.slug, request, h);
+      //check if page returns response, just return
+      if (page && page.request && page.statusCode) {
+        return page;
+      }
       // populate the content for that page:
       let allData = await processData(request, page, options.globalData);
       // validate that content:
