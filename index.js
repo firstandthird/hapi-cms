@@ -1,5 +1,5 @@
 const Joi = require('joi');
-const process = require('hapi-process-data');
+const process = require('@firstandthird/process-data');
 const boom = require('boom');
 const aug = require('aug');
 
