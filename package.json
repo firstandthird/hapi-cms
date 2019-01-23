@@ -34,7 +34,6 @@
     "aug": "^2.0.0",
     "boom": "^7.2.0",
     "joi": "^13.1.2",
-    "p-props": "^1.1.0",
-    "str2fn": "^5.0.0"
+    "hapi-process-data": "firstandthird/hapi-process-data#29f698300f7b9acd0461e0b936f95bb45a6c28ca"
   }
 }
