@@ -481,10 +481,7 @@ tap.test('options.dataKey will send data as that key', async t => {
 
 tap.test('supports debug mode', async t => {
   const server = new Hapi.Server({
-    port: 8080,
-    debug: {
-      log: ['*']
-    }
+    port: 8080
   });
 
   let logged = 0;
