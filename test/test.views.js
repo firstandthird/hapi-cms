@@ -479,6 +479,51 @@ tap.test('options.dataKey will send data as that key', async t => {
   t.end();
 });
 
+tap.test('supports debug mode', async t => {
+  const server = new Hapi.Server({
+    port: 8080
+  });
+
+  let logged = 0;
+  server.events.on('log', (tags, msg) => {
+    logged++;
+  });
+
+  await server.register({
+    plugin,
+    options: {
+      dataKey: 'content',
+      getPage(slug) {
+        return {
+          _template: '',
+          slug,
+          key1: 'value1',
+          key2: 'value2',
+        };
+      }
+    }
+  });
+
+  await server.start();
+  const res = await server.inject({
+    method: 'get',
+    url: '/page-one?debug=1'
+  });
+  t.equal(res.statusCode, 200, 'returns HTTP 200');
+  t.match(res.result, {
+    _template: '',
+    content: {
+      _template: '',
+      slug: 'page-one',
+      key1: 'value1',
+      key2: 'value2',
+    }
+  }, 'returns the correct data for the slug');
+  t.ok((logged > 0), 'Debugging sent logs as expected');
+  await server.stop();
+  t.end();
+});
+
 tap.test('getPage method can return toolkit to return early', async t => {
   const server = new Hapi.Server({ port: 8080 });
   await server.register([

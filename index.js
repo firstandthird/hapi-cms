@@ -1,6 +1,7 @@
 const Joi = require('joi');
-const processData = require('./lib/processData');
+const process = require('@firstandthird/process-data');
 const boom = require('boom');
+const aug = require('aug');
 
 const pluginDefaults = {
   dataKey: null,
@@ -33,7 +34,13 @@ const register = (server, pluginOptions) => {
         return page;
       }
       // populate the content for that page:
-      let allData = await processData(request, page, options.globalData);
+      const obj = aug({}, page, options.globalData);
+      const context = aug({}, request.server.methods, { request, page }, obj);
+      const debug = (request.query.debug === '1');
+      const log = (msg) => {
+        server.log(['hapi-cms', 'process-data', 'debug'], msg);
+      };
+      let allData = await process(obj, context, debug, log);
       // validate that content:
       const validatedResult = await options.validateData(allData);
       if (validatedResult instanceof Error) {
