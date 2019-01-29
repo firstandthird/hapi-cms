@@ -35,7 +35,7 @@ const register = (server, pluginOptions) => {
       }
       // populate the content for that page:
       const obj = aug({}, page, options.globalData);
-      const context = aug({}, request.server.methods, { request, page }, obj);
+      const context = aug({}, request.server.methods, { request, page });
       const debug = (request.query.debug === '1');
       const log = (msg) => {
         server.log(['hapi-cms', 'process-data', 'debug'], msg);
