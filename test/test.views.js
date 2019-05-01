@@ -399,6 +399,38 @@ tap.test('options.globalData will augment the data fetched from getPage', async 
   t.end();
 });
 
+tap.test('options.globalData can be overridden with data from getPage', async t => {
+  const server = new Hapi.Server({ port: DEFAULT_PORT });
+
+  await server.register({
+    plugin,
+    options: {
+      globalData: {
+        key2: 'value2'
+      },
+      getPage(slug) {
+        t.equal(slug, 'page-one', 'passes correct slug to getPage');
+        return {
+          _template: '',
+          key2: 'value1'
+        };
+      }
+    }
+  });
+  await server.start();
+  const res = await server.inject({
+    method: 'get',
+    url: '/page-one'
+  });
+  t.equal(res.statusCode, 200, 'returns HTTP 200');
+  t.match(res.result, {
+    _template: '',
+    key2: 'value1'
+  }, 'returns the correct data for the slug');
+  await server.stop();
+  t.end();
+});
+
 tap.test('options.validateData will notify of problems in the provided data', async t => {
   const server = new Hapi.Server({ port: DEFAULT_PORT });
   // a server method to wait for:
