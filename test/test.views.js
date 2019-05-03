@@ -5,8 +5,10 @@ const Joi = require('joi');
 const Boom = require('boom');
 //tap.runOnly = true;
 
+const DEFAULT_PORT = 5000;
+
 tap.test('request handler will get data for a given slug', async t => {
-  const server = new Hapi.Server({ port: 8080 });
+  const server = new Hapi.Server({ port: DEFAULT_PORT });
   // a server method to wait for:
   server.method('getImage', (name) => new Promise(resolve => resolve({
     image: 'someawesome.jpg',
@@ -49,7 +51,7 @@ tap.test('request handler will get data for a given slug', async t => {
 });
 
 tap.test('only call methods for things that look like methods', async t => {
-  const server = new Hapi.Server({ port: 8080 });
+  const server = new Hapi.Server({ port: DEFAULT_PORT });
   // a server method to wait for:
   server.method('getImage', (name) => new Promise(resolve => resolve({
     image: 'someawesome.jpg',
@@ -87,7 +89,7 @@ tap.test('only call methods for things that look like methods', async t => {
 });
 
 tap.test('allow namespaces', async t => {
-  const server = new Hapi.Server({ port: 8080 });
+  const server = new Hapi.Server({ port: DEFAULT_PORT });
   // a server method to wait for:
   server.method('utils.getImage', (name) => new Promise(resolve => resolve({
     image: 'someawesome.jpg',
@@ -128,7 +130,7 @@ tap.test('allow namespaces', async t => {
 });
 
 tap.test('pass in page data to methods', async t => {
-  const server = new Hapi.Server({ port: 8080 });
+  const server = new Hapi.Server({ port: DEFAULT_PORT });
   // a server method to wait for:
   server.method('getImage', (name) => new Promise(resolve => resolve({
     image: `${name}.jpg`,
@@ -169,7 +171,7 @@ tap.test('pass in page data to methods', async t => {
 });
 
 tap.test('plugin will error if no getPage method is provided', async t => {
-  const server = new Hapi.Server({ port: 8080 });
+  const server = new Hapi.Server({ port: DEFAULT_PORT });
   try {
     await server.register({
       plugin,
@@ -183,7 +185,7 @@ tap.test('plugin will error if no getPage method is provided', async t => {
 });
 
 tap.test('request handler will render a view for a given slug', async t => {
-  const server = new Hapi.Server({ port: 8080 });
+  const server = new Hapi.Server({ port: DEFAULT_PORT });
   await server.register([
     require('vision'),
     {
@@ -218,7 +220,7 @@ tap.test('request handler will render a view for a given slug', async t => {
 });
 
 tap.test('request handler will always return data if ?json=1', async t => {
-  const server = new Hapi.Server({ port: 8080 });
+  const server = new Hapi.Server({ port: DEFAULT_PORT });
   await server.register([
     require('vision'),
     {
@@ -254,7 +256,7 @@ tap.test('request handler will always return data if ?json=1', async t => {
 });
 
 tap.test('request handler will handle no data being returned', async t => {
-  const server = new Hapi.Server({ port: 8080 });
+  const server = new Hapi.Server({ port: DEFAULT_PORT });
   await server.register([
     require('vision'),
     {
@@ -282,7 +284,7 @@ tap.test('request handler will handle no data being returned', async t => {
 });
 
 tap.test('request handler will handle errors thrown', async t => {
-  const server = new Hapi.Server({ port: 8080 });
+  const server = new Hapi.Server({ port: DEFAULT_PORT });
   await server.register([
     require('vision'),
     {
@@ -314,7 +316,7 @@ tap.test('request handler will handle errors thrown', async t => {
 });
 
 tap.test('options.routePrefix will prefix the request handler', async t => {
-  const server = new Hapi.Server({ port: 8080 });
+  const server = new Hapi.Server({ port: DEFAULT_PORT });
   // a server method to wait for:
   server.method('getImage', (name) => new Promise(resolve => resolve({
     image: 'someawesome.jpg',
@@ -355,7 +357,7 @@ tap.test('options.routePrefix will prefix the request handler', async t => {
 });
 
 tap.test('options.globalData will augment the data fetched from getPage', async t => {
-  const server = new Hapi.Server({ port: 8080 });
+  const server = new Hapi.Server({ port: DEFAULT_PORT });
   // a server method to wait for:
   server.method('getImage', (name) => new Promise(resolve => resolve({
     image: 'someawesome.jpg',
@@ -397,8 +399,40 @@ tap.test('options.globalData will augment the data fetched from getPage', async 
   t.end();
 });
 
+tap.test('options.globalData can be overridden with data from getPage', async t => {
+  const server = new Hapi.Server({ port: DEFAULT_PORT });
+
+  await server.register({
+    plugin,
+    options: {
+      globalData: {
+        key2: 'value2'
+      },
+      getPage(slug) {
+        t.equal(slug, 'page-one', 'passes correct slug to getPage');
+        return {
+          _template: '',
+          key2: 'value1'
+        };
+      }
+    }
+  });
+  await server.start();
+  const res = await server.inject({
+    method: 'get',
+    url: '/page-one'
+  });
+  t.equal(res.statusCode, 200, 'returns HTTP 200');
+  t.match(res.result, {
+    _template: '',
+    key2: 'value1'
+  }, 'returns the correct data for the slug');
+  await server.stop();
+  t.end();
+});
+
 tap.test('options.validateData will notify of problems in the provided data', async t => {
-  const server = new Hapi.Server({ port: 8080 });
+  const server = new Hapi.Server({ port: DEFAULT_PORT });
   // a server method to wait for:
   server.method('getImage', (name) => new Promise(resolve => resolve({
     image: 'someawesome.jpg',
@@ -444,7 +478,7 @@ tap.test('options.validateData will notify of problems in the provided data', as
 });
 
 tap.test('options.dataKey will send data as that key', async t => {
-  const server = new Hapi.Server({ port: 8080 });
+  const server = new Hapi.Server({ port: DEFAULT_PORT });
 
   await server.register({
     plugin,
@@ -481,7 +515,7 @@ tap.test('options.dataKey will send data as that key', async t => {
 
 tap.test('supports debug mode', async t => {
   const server = new Hapi.Server({
-    port: 8080
+    port: DEFAULT_PORT
   });
 
   let logged = 0;
@@ -525,7 +559,7 @@ tap.test('supports debug mode', async t => {
 });
 
 tap.test('getPage method can return toolkit to return early', async t => {
-  const server = new Hapi.Server({ port: 8080 });
+  const server = new Hapi.Server({ port: DEFAULT_PORT });
   await server.register([
     require('vision'),
     {

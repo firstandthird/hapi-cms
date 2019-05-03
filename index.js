@@ -33,8 +33,8 @@ const register = (server, pluginOptions) => {
       if (page && page.request && page.statusCode) {
         return page;
       }
-      // populate the content for that page:
-      const obj = aug({}, page, options.globalData);
+      // populate the content for that page, ensuring that global can be overridden by page:
+      const obj = aug({}, options.globalData, page);
       const context = aug({}, request.server.methods, { request, page }, obj);
       const debug = (request.query.debug === '1');
       const log = (msg) => {
