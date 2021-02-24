@@ -5,7 +5,7 @@ A hapi plugin that simplifies rendering views with hapi server.  You provide you
 ## Installation
 
 ```sh
-npm install rapptor
+npm install hapi-cms
 ```
 
 ## Usage
@@ -16,13 +16,15 @@ The function takes in `getPage(slug, request, h)` and needs to
 return an object of the form:
 ```JSON
 {
-  // the template to be rendered, templates can be in whatever format is used by your view rendering engine:
   _template: "<h1> Hello {{ aTemplateVariable }}!</h1>"
-  // whatever data you want to pass to the template rendering engine:
   aTemplateVariable: "some value",
   anotherTemplateVariable: "some other value"
 }
 ```
+
+__template_ should contain the template to be rendered, templates can be in whatever format is used by your view rendering engine
+
+The remainining fields contain the data that your template will use for rendering and can be whatever you want.
 
 ## Example
 
@@ -60,10 +62,10 @@ getPage is an async function, so you can add whatever functionality you want (fe
 
   By default hapi-cms stores your template variables at the top level along with the reserved _template field. Specifying a dataKey option will cause hapi-cms to store the template variables inside a sub-object under that key.  For example if you specify `dataKey: vars` then your data will be presented to the view rendering engine in the form
   ```JSON
-  _template: '<h1> my template {{vars.variable1}} </h1>',
+  _template: "<h1> my template {{vars.variable1}} </h1>",
   vars: {
-    variable1: 'a var',
-    variable2: 'another var'
+    "variable1": "a var",
+    "variable2": "another var"
   }
   ```  
 - __routePrefix__
