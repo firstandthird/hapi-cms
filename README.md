@@ -16,7 +16,7 @@ The function takes in `getPage(slug, request, h)` and needs to
 return an object of the form:
 ```JSON
 {
-  "_template": "<h1> Hello {{ aTemplateVariable }}!</h1>"
+  "_template": "<h1> Hello {{ aTemplateVariable }}!</h1>",
   "aTemplateVariable": "some value",
   "anotherTemplateVariable": "some other value"
 }
