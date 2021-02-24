@@ -62,8 +62,8 @@ getPage is an async function, so you can add whatever functionality you want (fe
 
   By default hapi-cms stores your template variables at the top level along with the reserved _template field. Specifying a dataKey option will cause hapi-cms to store the template variables inside a sub-object under that key.  For example if you specify `dataKey: vars` then your data will be presented to the view rendering engine in the form
   ```JSON
-  _template: "<h1> my template {{vars.variable1}} </h1>",
-  vars: {
+  "_template": "<h1> my template {{vars.variable1}} </h1>",
+  "vars": {
     "variable1": "a var",
     "variable2": "another var"
   }
